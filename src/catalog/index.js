@@ -1,5 +1,6 @@
 import { describeMissingSource, SOURCE_FLAGS } from "../config.js"
 import { buildFrameworkCatalog } from "./framework.js"
+import { buildUiCatalog } from "./ui.js"
 
 /**
  * Monta o catalogo unico a partir das fontes resolvidas. Fonte ausente nao vira catalogo vazio
@@ -19,6 +20,15 @@ export const buildCatalog = (config) => {
     errors.push(...catalog.errors.map((error) => `archon-framework: ${error}`))
   } else {
     notes.push(describeMissingSource(SOURCE_FLAGS.framework.label, SOURCE_FLAGS.framework.flag, SOURCE_FLAGS.framework.env, config.diagnostics))
+  }
+
+  if (config.uiPath) {
+    const catalog = buildUiCatalog(config.uiPath)
+    symbols.push(...catalog.symbols)
+    sources.push("archon-ui")
+    errors.push(...catalog.errors.map((error) => `archon-ui: ${error}`))
+  } else {
+    notes.push(describeMissingSource(SOURCE_FLAGS.ui.label, SOURCE_FLAGS.ui.flag, SOURCE_FLAGS.ui.env, config.diagnostics))
   }
 
   const unavailableMessage =

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { findImplementations, findMembersOf, searchSymbols } from "../catalog/search.js"
+import { describeSymbol, searchSymbols } from "../catalog/search.js"
 import { formatSymbol, formatSymbolLine } from "../format.js"
 
 const KINDS = ["class", "interface", "record", "struct", "enum", "method", "property", "field", "constructor", "enum-member", "component", "hook", "function", "type", "const"]
@@ -42,10 +42,7 @@ export const registerArchonSymbol = (server, context) => {
       }
 
       const [best, ...rest] = matches
-      const members = findMembersOf(catalog.symbols, best.name)
-      const implementations = findImplementations(catalog.symbols, best.name)
-
-      const sections = [formatSymbol(best, { members, implementations })]
+      const sections = [formatSymbol(best, describeSymbol(catalog.symbols, best))]
 
       // Membro do proprio resultado principal ja aparece na secao de membros; repetir so ocupa contexto.
       const others = rest.filter((symbol) => symbol.declaringType !== best.name)

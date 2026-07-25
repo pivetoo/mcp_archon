@@ -7,7 +7,7 @@ const sortMembers = (members) =>
     return leftIndex - rightIndex || left.line - right.line
   })
 
-export const formatSymbol = (symbol, { members = [], implementations = [], verbose = true } = {}) => {
+export const formatSymbol = (symbol, { members = [], implementations = [], propsType = null, verbose = true } = {}) => {
   const lines = []
   const qualifier = symbol.declaringType ? `${symbol.declaringType}.` : ""
 
@@ -44,7 +44,7 @@ export const formatSymbol = (symbol, { members = [], implementations = [], verbo
 
   if (verbose && members.length > 0) {
     lines.push("")
-    lines.push(`### Membros (${members.length})`)
+    lines.push(propsType ? `### Props (${propsType}, ${members.length})` : `### Membros (${members.length})`)
     lines.push("")
     for (const member of sortMembers(members)) {
       const summary = member.summary ? ` — ${truncate(member.summary, 140)}` : ""

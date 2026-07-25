@@ -3,6 +3,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { buildCatalog } from "./catalog/index.js"
+import { registerArchonComponents } from "./tools/archonComponents.js"
 import { registerArchonSymbol } from "./tools/archonSymbol.js"
 
 const packageJson = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8"))
@@ -25,6 +26,7 @@ export const createServer = (config) => {
   const context = { config, getCatalog: () => catalog }
 
   registerArchonSymbol(server, context)
+  registerArchonComponents(server, context)
 
   return { server, catalog }
 }

@@ -96,6 +96,23 @@ export const searchSymbols = (symbols, { query, kind, project, source, includeTe
     .map((entry) => entry.symbol)
 }
 
+/**
+ * Detalhe do simbolo conforme a fonte. No `archon-ui`, o que interessa em um componente sao as props
+ * — que ficam numa interface `XProps` do mesmo arquivo, nao no componente.
+ */
+export const describeSymbol = (symbols, symbol) => {
+  if (symbol.source === "archon-ui") {
+    if (symbol.members?.length > 0) {
+      return { members: symbol.members, implementations: [] }
+    }
+
+    const props = symbols.find((candidate) => candidate.name === `${symbol.name}Props` && candidate.file === symbol.file)
+    return { members: props?.members ?? [], implementations: [], propsType: props?.name ?? null }
+  }
+
+  return { members: findMembersOf(symbols, symbol.name), implementations: findImplementations(symbols, symbol.name) }
+}
+
 export const findMembersOf = (symbols, typeName) =>
   symbols.filter((symbol) => symbol.declaringType === typeName && symbol.kind !== "class" && symbol.kind !== "interface")
 

@@ -1,0 +1,24 @@
+{
+  "name": "mcp-archon",
+  "version": "0.1.0",
+  "description": "Servidor MCP que serve o catalogo de simbolos e a documentacao dos frameworks Archon",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mcp-archon": "src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node src/index.js",
+    "catalog": "node src/cli/catalog.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
+}

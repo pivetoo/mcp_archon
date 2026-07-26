@@ -74,24 +74,72 @@ export const buildDocsCatalog = (docsPath) => {
   return { root: docsPath, documents, errors }
 }
 
-const scoreSection = (section, documentId, normalizedQuery) => {
+// Palavras curtas de ligacao nao ajudam a distinguir secao nenhuma em pt-BR.
+const STOP_WORDS = new Set([
+  "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas",
+  "um", "uma", "por", "que", "com", "para", "ao", "aos", "the", "of", "to", "is",
+])
+
+const tokenize = (text) =>
+  normalize(text)
+    .split(/[^a-z0-9_.-]+/)
+    .filter((term) => term.length > 2 && !STOP_WORDS.has(term))
+
+const countOccurrences = (haystack, needle) => (needle ? haystack.split(needle).length - 1 : 0)
+
+/**
+ * Pontua por TERMO, e nao pela consulta inteira como substring literal. A versao anterior so achava
+ * quando a frase aparecia identica no texto — ou seja, falhava em qualquer pergunta escrita em
+ * linguagem natural, que e exatamente para o que esta tool existe.
+ *
+ * A frase exata continua valendo mais: quem acerta o titulo da secao deve receber ela em primeiro.
+ */
+const scoreSection = (section, documentId, normalizedQuery, terms) => {
   const title = normalize(section.title ?? "")
   const body = normalize(section.body)
+  const identifier = normalize(documentId)
 
   let score = 0
 
   if (title === normalizedQuery) score += 100
-  else if (title.includes(normalizedQuery)) score += 60
-  if (normalize(documentId).includes(normalizedQuery)) score += 25
+  else if (normalizedQuery && title.includes(normalizedQuery)) score += 60
+  if (normalizedQuery && identifier.includes(normalizedQuery)) score += 25
+  score += Math.min(countOccurrences(body, normalizedQuery) * 8, 40)
 
-  const occurrences = body.split(normalizedQuery).length - 1
-  score += Math.min(occurrences * 8, 40)
+  let matchedTerms = 0
+  for (const term of terms) {
+    let termScore = 0
+
+    if (title.includes(term)) {
+      termScore += 30
+    }
+
+    if (identifier.includes(term)) {
+      termScore += 10
+    }
+
+    const occurrences = countOccurrences(body, term)
+    if (occurrences > 0) {
+      termScore += Math.min(4 + occurrences * 2, 20)
+    }
+
+    if (termScore > 0) {
+      matchedTerms += 1
+      score += termScore
+    }
+  }
+
+  // Secao que casa com mais termos da pergunta ganha da que casa com um so, muitas vezes.
+  if (terms.length > 1 && matchedTerms > 1) {
+    score += matchedTerms * 15
+  }
 
   return score
 }
 
 export const searchDocSections = (documents, { query, doc, limit = 3 }) => {
   const normalizedQuery = normalize(query)
+  const terms = tokenize(query)
   const results = []
 
   for (const document of documents) {
@@ -100,7 +148,7 @@ export const searchDocSections = (documents, { query, doc, limit = 3 }) => {
     }
 
     for (const section of document.sections) {
-      const score = scoreSection(section, document.id, normalizedQuery)
+      const score = scoreSection(section, document.id, normalizedQuery, terms)
       if (score > 0) {
         results.push({ document, section, score })
       }

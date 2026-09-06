@@ -1,6 +1,9 @@
 import { readdirSync } from "node:fs"
 import { join, relative } from "node:path"
 
+/** Normaliza para separador POSIX: no Windows `relative` devolve `src\x`, e o catalogo compara com `src/x`. */
+const toPosix = (value) => value.replaceAll("\\", "/")
+
 const DEFAULT_IGNORED = new Set([
   "bin", "obj", "node_modules", ".git", ".vs", ".idea", "dist", "coverage", "TestResults",
 ])
@@ -31,7 +34,7 @@ export const walkFiles = ({ root, extensions, ignoredDirectories = DEFAULT_IGNOR
       }
 
       if (extensions.some((extension) => entry.name.endsWith(extension))) {
-        results.push({ absolutePath, relativePath: relative(root, absolutePath) })
+        results.push({ absolutePath, relativePath: toPosix(relative(root, absolutePath)) })
       }
     }
   }

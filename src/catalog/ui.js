@@ -16,7 +16,7 @@ const resolveModule = ({ specifier, fromFile, root }) => {
   for (const suffix of CANDIDATE_SUFFIXES) {
     const candidate = `${base}${suffix}`
     if (existsSync(candidate)) {
-      return relative(root, candidate)
+      return relative(root, candidate).replaceAll("\\", "/")
     }
   }
 
